@@ -1,0 +1,169 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f8;
+  color: #1f2937;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.error {
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#task-list,
+#tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-item,
+.tag-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: #fafafa;
+}
+
+.task-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.task-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.task-title.completed {
+  text-decoration: line-through;
+  color: #6b7280;
+}
+
+.task-meta {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.overdue {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.tag-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.tag-checkbox input {
+  width: auto;
+}
+
+#logout-btn,
+.task-delete-btn,
+.tag-delete-btn {
+  background: #dc2626;
+}
+
+#refresh-tasks {
+  background: #16a34a;
+}

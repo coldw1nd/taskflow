@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: TaskFlow API
+  description: MVP API для веб-приложения TaskFlow
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+
+    TaskInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+        tagIds:
+          type: array
+          items:
+            type: integer
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        status:
+          type: string
+          enum:
+            - active
+            - completed
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+        tagIds:
+          type: array
+          items:
+            type: integer
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+            - active
+            - completed
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        user_id:
+          type: integer
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+
+    TasksPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+
+    TagIds:
+      type: object
+      properties:
+        tagIds:
+          type: array
+          items:
+            type: integer
+
+    ErrorBody:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/auth/register:
+    post:
+      security: []
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка валидации
+        '409':
+          description: Email уже занят
+
+  /api/auth/login:
+    post:
+      security: []
+      summary: Вход в систему
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Неверный email или пароль
+
+  /api/auth/me:
+    get:
+      summary: Получить текущего пользователя
+      responses:
+        '200':
+          description: Данные текущего пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Не авторизован
+
+  /api/tasks:
+    get:
+      summary: Получить список задач пользователя
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - active
+              - completed
+        - name: tag_id
+          in: query
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Список задач
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksPage'
+        '401':
+          description: Не авторизован
+
+    post:
+      summary: Создать задачу
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: Задача создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Не авторизован
+
+  /api/tasks/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      summary: Получить задачу
+      responses:
+        '200':
+          description: Задача найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Задача не найдена
+
+    patch:
+      summary: Обновить задачу
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Задача обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Не авторизован
+        '404':
+          description: Задача не найдена
+
+    delete:
+      summary: Удалить задачу
+      responses:
+        '204':
+          description: Задача удалена
+        '401':
+          description: Не авторизован
+        '404':
+          description: Задача не найдена
+
+  /api/tasks/{id}/tags:
+    put:
+      summary: Заменить теги задачи
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagIds'
+      responses:
+        '200':
+          description: Теги задачи обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Не авторизован
+        '404':
+          description: Задача не найдена
+
+  /api/tags:
+    get:
+      summary: Получить список тегов пользователя
+      responses:
+        '200':
+          description: Список тегов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+        '401':
+          description: Не авторизован
+
+    post:
+      summary: Создать тег
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+      responses:
+        '201':
+          description: Тег создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Не авторизован
+        '409':
+          description: Тег с таким именем уже существует
+
+  /api/tags/{id}:
+    delete:
+      summary: Удалить тег
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Тег удалён
+        '401':
+          description: Не авторизован
+        '404':
+          description: Тег не найден

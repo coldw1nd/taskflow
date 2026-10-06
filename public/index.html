@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>TaskFlow</h1>
+
+    <section id="auth-view" class="card hidden">
+      <div class="tabs">
+        <button type="button" id="show-login">Вход</button>
+        <button type="button" id="show-register">Регистрация</button>
+      </div>
+
+      <form id="login-form" class="form">
+        <h2>Вход</h2>
+        <label>
+          Email
+          <input type="email" id="login-email" required />
+        </label>
+        <label>
+          Пароль
+          <input type="password" id="login-password" required minlength="8" />
+        </label>
+        <button type="submit">Войти</button>
+      </form>
+
+      <form id="register-form" class="form hidden">
+        <h2>Регистрация</h2>
+        <label>
+          Email
+          <input type="email" id="register-email" required />
+        </label>
+        <label>
+          Пароль
+          <input type="password" id="register-password" required minlength="8" />
+        </label>
+        <button type="submit">Зарегистрироваться</button>
+      </form>
+
+      <p id="auth-message" class="error hidden"></p>
+    </section>
+
+    <section id="app-view" class="hidden">
+      <header class="app-header card">
+        <div>
+          Вы вошли как:
+          <strong id="user-email"></strong>
+        </div>
+        <button type="button" id="logout-btn">Выйти</button>
+      </header>
+
+      <p id="global-message" class="error hidden"></p>
+
+      <section class="card">
+        <h2>Новая задача</h2>
+        <form id="task-form" class="form">
+          <label>
+            Название задачи
+            <input type="text" id="task-title" maxlength="200" required />
+          </label>
+
+          <label>
+            Дедлайн
+            <input type="datetime-local" id="task-deadline" />
+          </label>
+
+          <div>
+            <p>Теги:</p>
+            <div id="tag-checkboxes"></div>
+          </div>
+
+          <button type="submit">Добавить задачу</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <div class="list-header">
+          <h2>Задачи</h2>
+          <div>
+            <select id="status-filter">
+              <option value="">Все</option>
+              <option value="active">Активные</option>
+              <option value="completed">Выполненные</option>
+            </select>
+            <button type="button" id="refresh-tasks">Обновить</button>
+          </div>
+        </div>
+
+        <p id="tasks-error" class="error hidden"></p>
+        <p id="tasks-loading" class="hidden">Загрузка...</p>
+        <p id="tasks-empty" class="hidden">
+          Задач пока нет. Создайте первую задачу выше.
+        </p>
+
+        <ul id="task-list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Теги</h2>
+
+        <form id="tag-form" class="form">
+          <label>
+            Название тега
+            <input type="text" id="tag-name" maxlength="50" required />
+          </label>
+          <button type="submit">Создать тег</button>
+        </form>
+
+        <ul id="tag-list"></ul>
+      </section>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
