@@ -15,13 +15,10 @@ function unauthorizedError(message = 'Authentication required') {
   return new ApiError(401, 'UNAUTHORIZED', message);
 }
 
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-vars
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({
-      error: {
-        code: 'INVALID_JSON',
-        message: 'Request body must be valid JSON'
-      }
+      error: { code: 'INVALID_JSON', message: 'Request body must be valid JSON' }
     });
   }
 
@@ -38,29 +35,23 @@ function errorHandler(err, req, res, next) {
     });
   }
 
-  const status = err.status || 500;
+  if (err.code === 'SQLITE_BUSY' || err.code === 'SQLITE_LOCKED') {
+    return res.status(503).json({
+      error: { code: 'DATABASE_BUSY', message: 'Database is temporarily unavailable' }
+    });
+  }
 
+  const status = err.status || 500;
   const body = {
     error: {
       code: err.code || 'INTERNAL_ERROR',
-      message: err.message || 'Internal server error'
+      message: status >= 500 ? 'Internal server error' : (err.message || 'Request failed')
     }
   };
 
-  if (err.details) {
-    body.error.details = err.details;
-  }
-
-  if (status >= 500) {
-    console.error(err);
-  }
-
-  res.status(status).json(body);
+  if (err.details && status < 500) body.error.details = err.details;
+  if (status >= 500) console.error(err);
+  return res.status(status).json(body);
 }
 
-module.exports = {
-  ApiError,
-  notFoundError,
-  unauthorizedError,
-  errorHandler
-};
+module.exports = { ApiError, notFoundError, unauthorizedError, errorHandler };

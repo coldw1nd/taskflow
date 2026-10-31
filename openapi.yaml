@@ -1,8 +1,9 @@
 openapi: 3.0.3
 info:
   title: TaskFlow API
-  description: MVP API для веб-приложения TaskFlow
+  description: MVP API для веб-приложения TaskFlow. Защищённые операции требуют Bearer JWT; для API настроено ограничение частоты запросов.
   version: 1.0.0
+  termsOfService: http://localhost:3000/api/docs
 
 servers:
   - url: http://localhost:3000
@@ -179,6 +180,24 @@ security:
   - bearerAuth: []
 
 paths:
+  /api/health:
+    get:
+      security: []
+      summary: Проверка доступности приложения и базы данных
+      responses:
+        '200':
+          description: Приложение и база данных доступны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+        '503':
+          description: База данных временно недоступна
+
   /api/auth/register:
     post:
       security: []
@@ -200,6 +219,8 @@ paths:
           description: Ошибка валидации
         '409':
           description: Email уже занят
+        '429':
+          description: Слишком много запросов
 
   /api/auth/login:
     post:
@@ -222,6 +243,8 @@ paths:
           description: Ошибка валидации
         '401':
           description: Неверный email или пароль
+        '429':
+          description: Слишком много попыток входа
 
   /api/auth/me:
     get:

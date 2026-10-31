@@ -3,3 +3,9 @@ coverage/
 .env
 taskflow.sqlite
 taskflow.sqlite-*
+.env.*
+!.env.example
+*.sqlite
+*.sqlite3
+*.db
+coverage/

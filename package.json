@@ -7,7 +7,11 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "jest --runInBand --forceExit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "migrate": "node scripts/migrate.mjs",
+    "db:check": "node scripts/db-check.mjs",
+    "perf": "node scripts/perf.mjs",
+    "db:rollback": "node scripts/rollback.mjs"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

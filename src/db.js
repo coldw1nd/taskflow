@@ -1,57 +1,62 @@
 const Database = require('better-sqlite3');
+const fs = require('fs');
 const path = require('path');
 
 const dbFile =
   process.env.DB_FILE === ':memory:'
     ? ':memory:'
-    : path.join(__dirname, '..', process.env.DB_FILE || 'taskflow.sqlite');
+    : path.resolve(__dirname, '..', process.env.DB_FILE || 'taskflow.sqlite');
 
 const db = new Database(dbFile);
-
 db.pragma('foreign_keys = ON');
 
 if (dbFile !== ':memory:') {
   db.pragma('journal_mode = WAL');
+  db.pragma('busy_timeout = 5000');
 }
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  email TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  created_at TEXT NOT NULL
-);
+function applyMigrations(database = db) {
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version TEXT PRIMARY KEY,
+      applied_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS schema_migration_reverts (
+      version TEXT PRIMARY KEY,
+      reverted_at TEXT NOT NULL,
+      FOREIGN KEY(version) REFERENCES schema_migrations(version) ON DELETE CASCADE
+    );
+  `);
 
-CREATE TABLE IF NOT EXISTS tasks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL CHECK(length(title) > 0 AND length(title) <= 200),
-  status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'completed')),
-  deadline TEXT,
-  created_at TEXT NOT NULL,
-  completed_at TEXT,
-  user_id INTEGER NOT NULL,
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-  CHECK(deadline IS NULL OR deadline >= created_at)
-);
+  const migrationsDirectory = path.join(__dirname, '..', 'migrations');
+  const migrationFiles = fs
+    .readdirSync(migrationsDirectory)
+    .filter((file) => /^\d+_[a-z0-9_-]+\.sql$/i.test(file))
+    .sort();
 
-CREATE TABLE IF NOT EXISTS tags (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL CHECK(length(name) > 0 AND length(name) <= 50),
-  user_id INTEGER NOT NULL,
-  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE(name, user_id)
-);
+  const isApplied = database.prepare(
+    'SELECT 1 FROM schema_migrations WHERE version = ?'
+  );
+  const isReverted = database.prepare(
+    'SELECT 1 FROM schema_migration_reverts WHERE version = ?'
+  );
+  const markApplied = database.prepare(
+    'INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)'
+  );
 
-CREATE TABLE IF NOT EXISTS task_tags (
-  task_id INTEGER NOT NULL,
-  tag_id INTEGER NOT NULL,
-  PRIMARY KEY(task_id, tag_id),
-  FOREIGN KEY(task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-  FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
-);
+  for (const file of migrationFiles) {
+    if (isApplied.get(file) || isReverted.get(file)) {
+      continue;
+    }
 
-CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
-CREATE INDEX IF NOT EXISTS idx_tags_user_id ON tags(user_id);
-`);
+    const sql = fs.readFileSync(path.join(migrationsDirectory, file), 'utf8');
+    database.transaction(() => {
+      database.exec(sql);
+      markApplied.run(file, new Date().toISOString());
+    })();
+  }
+}
 
-module.exports = { db };
+applyMigrations(db);
+
+module.exports = { db, applyMigrations };

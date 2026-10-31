@@ -61,6 +61,15 @@ describe('health and auth', () => {
     expect(response.body.status).toBe('ok');
   });
 
+  test('OpenAPI specification and Swagger UI are available', async () => {
+    const docs = await request(app).get('/api/docs').expect(200);
+    expect(docs.text).toContain('SwaggerUIBundle');
+
+    const specification = await request(app).get('/openapi.yaml').expect(200);
+    expect(specification.text).toContain('openapi: 3.0.3');
+    expect(specification.text).toContain('/api/tasks');
+  });
+
   test('cannot register duplicate email', async () => {
     await request(app)
       .post('/api/auth/register')
@@ -259,5 +268,17 @@ describe('tags and task-tag relation', () => {
       .delete(`/api/tags/${user1TagId}`)
       .set(authHeader(token1))
       .expect(204);
+  });
+
+  test('business operations are written to the audit log', () => {
+    const records = db.prepare(
+      'SELECT action, entity_type FROM audit_logs ORDER BY id'
+    ).all();
+    const actions = records.map((record) => record.action);
+    expect(actions).toContain('task.created');
+    expect(actions).toContain('task.updated');
+    expect(actions).toContain('task.deleted');
+    expect(actions).toContain('tag.created');
+    expect(actions).toContain('tag.deleted');
   });
 });
